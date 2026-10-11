@@ -1,0 +1,536 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090910">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mi AI Studio">
+<title>Mi AI Studio | Creador de Videos</title>
+<style>
+:root {
+  --bg:#090910;
+  --panel:#171722;
+  --border:#303044;
+  --purple:#895bff;
+  --text:#f6f5ff;
+  --muted:#a5a3b6;
+}
+* { box-sizing:border-box }
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,
+  "Segoe UI",sans-serif;
+}
+header {
+  padding:20px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.logo {
+  font-weight:900;
+  letter-spacing:1px;
+  font-size:19px;
+}
+.logo span { color:#ad91ff }
+.tag {
+  font-size:11px;
+  background:#29213f;
+  color:#d3bfff;
+  border-radius:20px;
+  padding:7px 11px;
+}
+main {
+  max-width:850px;
+  margin:auto;
+  padding:22px 16px 60px;
+}
+h1 { font-size:30px; margin-bottom:8px }
+p { color:var(--muted); line-height:1.5 }
+.panel {
+  background:var(--panel);
+  border:1px solid var(--border);
+  padding:18px;
+  border-radius:19px;
+  margin-top:20px;
+}
+h2 { font-size:17px; margin:0 0 16px }
+.upload {
+  display:block;
+  text-align:center;
+  padding:26px;
+  border:2px dashed #51436f;
+  border-radius:14px;
+  cursor:pointer;
+  background:#211b31;
+}
+.upload strong { color:#d8caff }
+input[type=file] { display:none }
+canvas {
+  width:100%;
+  aspect-ratio:9/16;
+  max-height:510px;
+  object-fit:contain;
+  display:block;
+  background:#050509;
+  border-radius:13px;
+}
+.preview {
+  max-width:340px;
+  margin:auto;
+}
+.effects {
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+}
+.effect {
+  background:#242436;
+  border:1px solid #39394d;
+  border-radius:14px;
+  padding:20px 10px;
+  color:white;
+  font-size:14px;
+  cursor:pointer;
+  text-align:center;
+}
+.effect .emoji {
+  display:block;
+  font-size:28px;
+  margin-bottom:9px;
+}
+.effect.active {
+  border:2px solid var(--purple);
+  background:#34264d;
+}
+label { display:block; margin-bottom:12px }
+input[type=range] {
+  width:100%;
+  accent-color:var(--purple);
+}
+button.mainbtn {
+  display:block;
+  width:100%;
+  border:0;
+  padding:17px;
+  border-radius:13px;
+  background:linear-gradient(120deg,#7443ed,#ae62ff);
+  color:white;
+  font-size:16px;
+  font-weight:750;
+  cursor:pointer;
+  margin-top:12px;
+}
+button.secondary {
+  background:#303044;
+}
+button:disabled {
+  opacity:.5;
+  cursor:not-allowed;
+}
+#status {
+  text-align:center;
+  min-height:24px;
+  font-size:13px;
+}
+footer {
+  text-align:center;
+  color:#88869b;
+  font-size:12px;
+  padding:25px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">✦ MI <span>AI STUDIO</span></div>
+  <div class="tag">GRATIS · PERSONAL</div>
+</header>
+
+<main>
+  <h1>Convierte fotos en videos</h1>
+  <p>
+    Crea animaciones cinematográficas desde tu
+    navegador. Sin créditos, sin cuentas y sin
+    servicios de pago.
+  </p>
+
+  <section class="panel">
+    <h2>1. Selecciona tu fotografía</h2>
+    <label class="upload" for="file">
+      <strong>＋ Subir fotografía</strong>
+      <p>JPG, PNG o WEBP</p>
+    </label>
+    <input id="file" type="file" accept="image/*">
+  </section>
+
+  <section class="panel">
+    <h2>2. Vista previa</h2>
+    <div class="preview">
+      <canvas id="canvas" width="540" height="960"></canvas>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>3. Selecciona un efecto</h2>
+    <div class="effects">
+      <button class="effect active" data-effect="earth">
+        <span class="emoji">🌎</span>
+        Earth Zoom
+      </button>
+      <button class="effect" data-effect="cinema">
+        <span class="emoji">🎬</span>
+        Zoom cinematográfico
+      </button>
+      <button class="effect" data-effect="blur">
+        <span class="emoji">💨</span>
+        Motion Blur
+      </button>
+      <button class="effect" data-effect="float">
+        <span class="emoji">✨</span>
+        Movimiento suave
+      </button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>4. Configuración</h2>
+    <label>
+      Duración: <strong id="durationValue">5</strong> segundos
+    </label>
+    <input id="duration" type="range"
+      min="2" max="15" value="5" step="1">
+
+    <label style="margin-top:18px">
+      Intensidad: <strong id="intensityValue">60</strong>%
+    </label>
+    <input id="intensity" type="range"
+      min="10" max="100" value="60" step="5">
+  </section>
+
+  <section class="panel">
+    <h2>5. Crear video</h2>
+    <button id="previewBtn" class="mainbtn secondary">
+      ▶ Vista previa del efecto
+    </button>
+    <button id="generateBtn" class="mainbtn">
+      ✦ Generar y descargar video
+    </button>
+    <p id="status">Sube una foto para comenzar.</p>
+    <p style="font-size:12px">
+      La descarga en formato WebM depende de la
+      compatibilidad de tu navegador.
+    </p>
+  </section>
+</main>
+
+<footer>
+  MI AI STUDIO © 2026 · Tu estudio creativo personal
+</footer>
+
+<script>
+"use strict";
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d", { alpha:false });
+const fileInput = document.getElementById("file");
+const durationInput = document.getElementById("duration");
+const intensityInput = document.getElementById("intensity");
+const previewBtn = document.getElementById("previewBtn");
+const generateBtn = document.getElementById("generateBtn");
+const statusEl = document.getElementById("status");
+
+let photo = null;
+let photoURL = null;
+let effect = "earth";
+let playing = false;
+let exporting = false;
+
+const W = canvas.width;
+const H = canvas.height;
+
+function status(message) {
+  statusEl.textContent = message;
+}
+
+function clamp(n, a, b) {
+  return Math.max(a, Math.min(b, n));
+}
+
+function smooth(t) {
+  t = clamp(t,0,1);
+  return t*t*(3-2*t);
+}
+
+function drawCover(img, scale=1, dx=0, dy=0, alpha=1) {
+  const iw = img.naturalWidth;
+  const ih = img.naturalHeight;
+  const base = Math.max(W/iw,H/ih);
+  const dw = iw*base*scale;
+  const dh = ih*base*scale;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(
+    img,
+    (W-dw)/2+dx,
+    (H-dh)/2+dy,
+    dw,dh
+  );
+  ctx.restore();
+}
+
+function render(t) {
+  ctx.fillStyle = "#050509";
+  ctx.fillRect(0,0,W,H);
+
+  if (!photo) {
+    ctx.fillStyle = "#a9a0c4";
+    ctx.textAlign = "center";
+    ctx.font = "24px sans-serif";
+    ctx.fillText("MI AI STUDIO",W/2,H/2-15);
+    ctx.font = "16px sans-serif";
+    ctx.fillText("Sube una fotografía",W/2,H/2+25);
+    return;
+  }
+
+  const k = Number(intensityInput.value)/100;
+  const s = smooth(t);
+
+  if (effect === "earth") {
+    // Simulación de alejamiento, no vista satelital real.
+    const scale = 1 + 1.8*k*(1-s);
+    drawCover(photo,scale);
+    const shade = ctx.createRadialGradient(
+      W/2,H/2,100,W/2,H/2,H*.7
+    );
+    shade.addColorStop(0,"rgba(0,0,0,0)");
+    shade.addColorStop(1,"rgba(0,0,0,.5)");
+    ctx.fillStyle = shade;
+    ctx.fillRect(0,0,W,H);
+
+  } else if (effect === "cinema") {
+    const scale = 1 + .5*k*s;
+    drawCover(photo,scale,0,-25*k*s);
+
+  } else if (effect === "blur") {
+    const shift = 65*k*(1-s);
+    for(let i=8;i>=0;i--) {
+      drawCover(
+        photo,
+        1+.15*k*s,
+        shift*(i/8),
+        0,
+        i===0 ? .45 : .07
+      );
+    }
+
+  } else if (effect === "float") {
+    const x = Math.sin(t*Math.PI*2)*30*k;
+    const y = Math.sin(t*Math.PI)*35*k;
+    drawCover(photo,1+.12*k,x,y);
+  }
+}
+
+fileInput.addEventListener("change", async e => {
+  const file = e.target.files[0];
+  if(!file) return;
+
+  if(!file.type.startsWith("image/")) {
+    status("Selecciona un archivo de imagen válido.");
+    return;
+  }
+
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+
+  img.onload = () => {
+    if(photoURL) URL.revokeObjectURL(photoURL);
+    photoURL = url;
+    photo = img;
+    render(0);
+    status("Fotografía cargada. Selecciona un efecto.");
+  };
+
+  img.onerror = () => {
+    URL.revokeObjectURL(url);
+    status("No se pudo abrir la fotografía.");
+  };
+
+  img.src = url;
+});
+
+document.querySelectorAll(".effect").forEach(btn => {
+  btn.addEventListener("click", () => {
+    if(exporting || playing) return;
+
+    document.querySelectorAll(".effect").forEach(b => {
+      b.classList.remove("active");
+    });
+    btn.classList.add("active");
+    effect = btn.dataset.effect;
+    render(0);
+  });
+});
+
+durationInput.addEventListener("input", () => {
+  document.getElementById("durationValue").textContent =
+    durationInput.value;
+});
+
+intensityInput.addEventListener("input", () => {
+  document.getElementById("intensityValue").textContent =
+    intensityInput.value;
+  if(!playing && !exporting) render(0);
+});
+
+function animate(seconds, onFinish) {
+  const start = performance.now();
+
+  function frame(now) {
+    const elapsed = (now-start)/1000;
+    const t = clamp(elapsed/seconds,0,1);
+    render(t);
+
+    if(t<1) {
+      requestAnimationFrame(frame);
+    } else {
+      onFinish();
+    }
+  }
+
+  requestAnimationFrame(frame);
+}
+
+previewBtn.addEventListener("click", () => {
+  if(!photo) {
+    status("Primero sube una fotografía.");
+    return;
+  }
+  if(playing || exporting) return;
+
+  playing = true;
+  previewBtn.disabled = true;
+  generateBtn.disabled = true;
+  status("Reproduciendo vista previa...");
+
+  animate(Number(durationInput.value), () => {
+    playing = false;
+    previewBtn.disabled = false;
+    generateBtn.disabled = false;
+    status("Vista previa terminada.");
+  });
+});
+
+function supportedMime() {
+  if(typeof MediaRecorder === "undefined") return null;
+
+  const types = [
+    "video/webm;codecs=vp9",
+    "video/webm;codecs=vp8",
+    "video/webm"
+  ];
+
+  return types.find(type =>
+    MediaRecorder.isTypeSupported(type)
+  ) || null;
+}
+
+generateBtn.addEventListener("click", () => {
+  if(!photo) {
+    status("Primero sube una fotografía.");
+    return;
+  }
+  if(playing || exporting) return;
+
+  if(!canvas.captureStream) {
+    status("Este navegador no permite exportar video.");
+    return;
+  }
+
+  const mime = supportedMime();
+  if(!mime) {
+    status(
+      "Tu navegador no admite exportación WebM. " +
+      "Prueba Chrome o Edge en una computadora."
+    );
+    return;
+  }
+
+  const seconds = Number(durationInput.value);
+  const chunks = [];
+  let recorder;
+  let stream;
+
+  try {
+    render(0);
+    stream = canvas.captureStream(30);
+    recorder = new MediaRecorder(stream, {
+      mimeType:mime,
+      videoBitsPerSecond:3500000
+    });
+  } catch(err) {
+    status("Error al iniciar la exportación: "+err.message);
+    if(stream) stream.getTracks().forEach(t=>t.stop());
+    return;
+  }
+
+  exporting = true;
+  generateBtn.disabled = true;
+  previewBtn.disabled = true;
+  durationInput.disabled = true;
+  intensityInput.disabled = true;
+
+  recorder.ondataavailable = e => {
+    if(e.data.size>0) chunks.push(e.data);
+  };
+
+  recorder.onerror = () => {
+    status("Ocurrió un error al grabar el video.");
+  };
+
+  recorder.onstop = () => {
+    stream.getTracks().forEach(t=>t.stop());
+
+    if(chunks.length) {
+      const blob = new Blob(chunks,{type:"video/webm"});
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "mi-ai-studio-"+Date.now()+".webm";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      status("Video generado. Revisa tus descargas.");
+      setTimeout(()=>URL.revokeObjectURL(url),60000);
+    } else {
+      status("No se pudo generar el archivo de video.");
+    }
+
+    exporting = false;
+    generateBtn.disabled = false;
+    previewBtn.disabled = false;
+    durationInput.disabled = false;
+    intensityInput.disabled = false;
+  };
+
+  recorder.start(200);
+  status("Generando video...");
+
+  animate(seconds, () => {
+    if(recorder.state !== "inactive") {
+      recorder.stop();
+    }
+  });
+});
+
+render(0);
+</script>
+</body>
+</html>
